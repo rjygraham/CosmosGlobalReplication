@@ -30,9 +30,16 @@ jobs:
 
     - name: Publish functions
       run: |
-        pushd './${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}'
+        pushd '${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}'
         dotnet publish --configuration Release --output ./output
         popd
+
+    - name: Archive Function
+      uses: thedoctor0/zip-release@master
+      with:
+        type: 'zip'
+        directory: ${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}/output
+        filename: '${{ env.AZURE_FUNCTIONAPP_NAME }}.zip'
 
     - uses: "marvinpinto/action-automatic-releases@latest"
       with:
@@ -41,4 +48,4 @@ jobs:
         prerelease: true
         title: "Development Build"
         files: |
-          ./${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}/output/*.zip
+          ${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}/output/*.zip
