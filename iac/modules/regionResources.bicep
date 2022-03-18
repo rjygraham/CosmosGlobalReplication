@@ -28,6 +28,49 @@ resource sharedCosmosDb 'Microsoft.DocumentDB/databaseAccounts@2021-11-15-previe
   scope: sharedResourceGroup
 }
 
+resource cosmosDb 'Microsoft.DocumentDB/databaseAccounts@2021-11-15-preview' = {
+  name: cosmosDbName
+  location: location
+  properties: {
+    databaseAccountOfferType: 'Standard'
+    locations: [
+      {
+        failoverPriority: 0
+        isZoneRedundant: false
+        locationName: location
+      }
+    ]
+  }
+
+  resource database 'sqlDatabases' = {
+    name: cosmosDbDatabaseName
+    location: location
+    properties: {
+      options: {
+        throughput: 400
+      }
+      resource: {
+        id: cosmosDbDatabaseName
+      }
+    }
+
+    resource leases 'containers' = {
+      name: cosmosDbContainerName
+      properties: {
+        resource: {
+          id: cosmosDbContainerName
+          partitionKey: {
+            paths: [
+              '/id'
+            ]
+            kind: 'Hash'
+          }
+        }
+      }
+    }
+  }
+}
+
 resource signalR 'Microsoft.SignalRService/signalR@2021-10-01' = {
   name: signalRName
   location: location
@@ -149,47 +192,11 @@ resource functionApp 'Microsoft.Web/sites@2021-03-01' = {
       ]
     }
   }
-}
 
-resource cosmosDb 'Microsoft.DocumentDB/databaseAccounts@2021-11-15-preview' = {
-  name: cosmosDbName
-  location: location
-  properties: {
-    databaseAccountOfferType: 'Standard'
-    locations: [
-      {
-        failoverPriority: 0
-        isZoneRedundant: false
-        locationName: location
-      }
-    ]
-  }
-
-  resource database 'sqlDatabases' = {
-    name: cosmosDbDatabaseName
-    location: location
+  resource zipDeploy 'extensions' = {
+    name: 'MSDeploy'
     properties: {
-      options: {
-        throughput: 400
-      }
-      resource: {
-        id: cosmosDbDatabaseName
-      }
-    }
-
-    resource leases 'containers' = {
-      name: cosmosDbContainerName
-      properties: {
-        resource: {
-          id: cosmosDbContainerName
-          partitionKey: {
-            paths: [
-              '/id'
-            ]
-            kind: 'Hash'
-          }
-        }
-      }
+      packageUri: 'https://github.com/rjygraham/CosmosGlobalReplication/releases/download/latest/MultiRegionFunctions.zip'
     }
   }
 }

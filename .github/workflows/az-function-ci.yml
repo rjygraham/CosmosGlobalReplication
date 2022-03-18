@@ -37,7 +37,9 @@ jobs:
 
     - name: Zip Function App
       shell: pwsh
-      run: Compress-Archive -Path "${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}/output/*" -DestinationPath "${{ env.OUTPUT_PATH }}/MultiRegionFunctions.zip"
+      run: |
+        mkdir ${{ env.OUTPUT_PATH }}
+        Compress-Archive -Path "${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}/output/*" -DestinationPath "${{ env.OUTPUT_PATH }}/MultiRegionFunctions.zip"
 
     - uses: "marvinpinto/action-automatic-releases@latest"
       with:

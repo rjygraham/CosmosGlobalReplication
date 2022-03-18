@@ -28,7 +28,7 @@ resource cosmosDb 'Microsoft.DocumentDB/databaseAccounts@2021-11-15-preview' = {
     properties: {
       options: {
         autoscaleSettings: {
-          maxThroughput: 400
+          maxThroughput: 1000
         }
       }
       resource: {

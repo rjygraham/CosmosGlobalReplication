@@ -34,3 +34,8 @@ module regionDeploymnent 'modules/regionResourceGroup.bicep' = [for region in re
     sharedCosmosDbName: sharedDeployment.outputs.sharedCosmosDbName
   }
 }]
+
+output config array = [for (region, i) in regions: {
+  name: region.location
+  config: regionDeploymnent[i].outputs.regionConfig
+}]

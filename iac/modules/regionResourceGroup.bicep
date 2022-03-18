@@ -20,3 +20,8 @@ module resources 'regionResources.bicep' = {
     sharedCosmosDbName: sharedCosmosDbName
   }
 }
+
+output regionConfig object = {
+  url: resources.outputs.functionAppUrl
+  key: resources.outputs.functionAppKey
+}
