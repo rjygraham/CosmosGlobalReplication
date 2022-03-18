@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.1.31903.286
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MultiRegion.Functions", "MultiRegion.Functions\MultiRegion.Functions.csproj", "{E5A8A7F9-4267-4258-8166-054380F2D497}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MultiRegion.Client", "MultiRegion.Client\MultiRegion.Client.csproj", "{DC53981A-5095-4A01-AB1E-93F4A2F02902}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{E5A8A7F9-4267-4258-8166-054380F2D497}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E5A8A7F9-4267-4258-8166-054380F2D497}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E5A8A7F9-4267-4258-8166-054380F2D497}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E5A8A7F9-4267-4258-8166-054380F2D497}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DC53981A-5095-4A01-AB1E-93F4A2F02902}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DC53981A-5095-4A01-AB1E-93F4A2F02902}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DC53981A-5095-4A01-AB1E-93F4A2F02902}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DC53981A-5095-4A01-AB1E-93F4A2F02902}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {9B6C67D1-72B3-4270-BCE8-C34FDFA3A244}
+	EndGlobalSection
+EndGlobal
