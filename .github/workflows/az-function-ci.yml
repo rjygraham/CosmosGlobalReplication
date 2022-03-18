@@ -6,6 +6,7 @@ on:
 env:
   AZURE_FUNCTIONAPP_NAME: 'MultiRegion.Functions'
   AZURE_FUNCTIONAPP_PACKAGE_PATH: './src/MultiRegion/MultiRegion.Functions'
+  OUTPUT_PATH: './output'
   DOTNET_VERSION: '6.0.x'
 
 jobs:
@@ -34,12 +35,9 @@ jobs:
         dotnet publish --configuration Release --output ./output
         popd
 
-    - name: Archive Function
-      uses: thedoctor0/zip-release@master
-      with:
-        type: 'zip'
-        directory: ${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}/output
-        filename: '${{ env.AZURE_FUNCTIONAPP_NAME }}.zip'
+    - name: Zip Function App
+      shell: pwsh
+      run: Compress-Archive -Path "${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}/output/*" -DestinationPath "${{ env.OUTPUT_PATH }}/MultiRegionFunctions.zip"
 
     - uses: "marvinpinto/action-automatic-releases@latest"
       with:
@@ -48,4 +46,4 @@ jobs:
         prerelease: true
         title: "Development Build"
         files: |
-          ${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}/output/*.zip
+          ${{ env.OUTPUT_PATH }}/MultiRegionFunctions.zip
