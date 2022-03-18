@@ -9,7 +9,7 @@ env:
   DOTNET_VERSION: '6.0.x'
 
 jobs:
-  build-and-deploy:
+  build-and-publish:
     runs-on: ubuntu-latest
     environment: dev
     steps:
@@ -41,4 +41,4 @@ jobs:
         prerelease: true
         title: "Development Build"
         files: |
-          *.zip
+          ./${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}/output/*.zip
