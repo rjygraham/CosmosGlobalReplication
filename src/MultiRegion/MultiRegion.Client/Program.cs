@@ -7,22 +7,17 @@ Console.WriteLine("Reading configuration...");
 
 var configuration = LoadConfiguration();
 
-var region1 = new RegionOptions();
-configuration.GetSection("Region1").Bind(region1);
-
-var region2 = new RegionOptions();
-configuration.GetSection("Region2").Bind(region2);
-
-var region3 = new RegionOptions();
-configuration.GetSection("Region3").Bind(region3);
+var signalrRegions = new List<SignalRRegionConfigOptions>();
+configuration.GetSection("SignalR").Bind(signalrRegions);
 
 Console.ForegroundColor = ConsoleColor.White;
 Console.WriteLine("Initializing SignalR connections...");
 
 // Start SignalR connections to receive messages
-await StartConnectionAsync(region1.RegionName, region1.FunctionAppBaseUri, region1.FunctionAppKey);
-await StartConnectionAsync(region2.RegionName, region2.FunctionAppBaseUri, region2.FunctionAppKey);
-await StartConnectionAsync(region3.RegionName, region3.FunctionAppBaseUri, region3.FunctionAppKey);
+foreach (var signalrRegion in signalrRegions)
+{
+	await StartConnectionAsync(signalrRegion.Name, signalrRegion.Config.Url, signalrRegion.Config.Key);
+}
 
 Console.ForegroundColor = ConsoleColor.White;
 Console.WriteLine("Awaiting new messages, press [Enter] to exit.");

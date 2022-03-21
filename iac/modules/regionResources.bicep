@@ -150,18 +150,6 @@ resource functionApp 'Microsoft.Web/sites@2021-03-01' = {
     siteConfig: {
       appSettings: [
         {
-          name: 'AzureWebJobsStorage'
-          value: 'DefaultEndpointsProtocol=https;AccountName=${storageAccount.name};AccountKey=${storageAccount.listKeys().keys[0].value};EndpointSuffix=core.windows.net'
-        }
-        {
-          name: 'FUNCTIONS_EXTENSION_VERSION'
-          value: '~4'
-        }
-        {
-          name: 'FUNCTIONS_WORKER_RUNTIME'
-          value: 'dotnet'
-        }
-        {
           name: 'APPINSIGHTS_INSTRUMENTATIONKEY'
           value: appInsights.properties.InstrumentationKey
         }
@@ -170,12 +158,16 @@ resource functionApp 'Microsoft.Web/sites@2021-03-01' = {
           value: appInsights.properties.ConnectionString
         }
         {
-          name: 'origin'
-          value: location
-        }
-        {
           name: 'AzureSignalRConnectionString'
           value: signalR.listKeys().primaryConnectionString
+        }
+        {
+          name: 'AzureWebJobs.CreateRecord.Disabled'
+          value: '1'
+        }
+        {
+          name: 'AzureWebJobsStorage'
+          value: 'DefaultEndpointsProtocol=https;AccountName=${storageAccount.name};AccountKey=${storageAccount.listKeys().keys[0].value};EndpointSuffix=core.windows.net'
         }
         {
           name: 'CosmosDbGlobalConnectionString'
@@ -186,21 +178,26 @@ resource functionApp 'Microsoft.Web/sites@2021-03-01' = {
           value: cosmosDb.listConnectionStrings().connectionStrings[0].connectionString
         }
         {
-          name: 'AzureWebJobs.CreateRecord.Disabled'
-          value: '1'
+          name: 'FUNCTIONS_EXTENSION_VERSION'
+          value: '~4'
+        }
+        {
+          name: 'FUNCTIONS_WORKER_RUNTIME'
+          value: 'dotnet'
+        }
+        {
+          name: 'origin'
+          value: location
+        }
+        {
+          name: 'WEBSITE_RUN_FROM_PACKAGE'
+          value: 'https://github.com/rjygraham/CosmosGlobalReplication/releases/download/latest/MultiRegionFunctions.zip'
         }
       ]
     }
   }
-
-  resource zipDeploy 'extensions' = {
-    name: 'MSDeploy'
-    properties: {
-      packageUri: 'https://github.com/rjygraham/CosmosGlobalReplication/releases/download/latest/MultiRegionFunctions.zip'
-    }
-  }
 }
 
-output functionAppUrl string = functionApp.properties.hostNames[0]
+output functionAppUrl string = 'https://${functionApp.properties.hostNames[0]}/api'
 #disable-next-line outputs-should-not-contain-secrets
-output functionAppKey string = functionApp.listsyncfunctiontriggerstatus().key
+output functionAppKey string = listKeys('${functionApp.id}/host/default', '2021-02-01').functionKeys.default
