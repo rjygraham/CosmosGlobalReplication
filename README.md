@@ -1,4 +1,4 @@
-# Cosmos Multi Region
+# CosmosGlobalReplication
 
 This repository demonstrates how to deploy a mult-region Cosmos DB account with local change feed processing via Azure Functions within each region.
 
