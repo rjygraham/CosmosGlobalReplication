@@ -4,10 +4,10 @@ This repository demonstrates how to deploy a mult-region Cosmos DB account with 
 
 ## Setup
 
-Deploy the Azure infrastructure by clicking the the "Deploy to Azure" button below. You may visualize the deployment by clicking the "Visualize" button to better understand exactly what will be deployed.
+Deploy the Azure infrastructure by clicking the the "Deploy to Azure" button below:
 
-[![Deploy To Azure](https://raw.githubusercontent.com/azure/azure-quickstart-templates/master/1-CONTRIBUTION-GUIDE/images/deploytoazure.svg?sanitize=true)](https://portal.azure.com/#create/Microsoft.Template/uri/)
-[![Visualize](https://raw.githubusercontent.com/azure/azure-quickstart-templates/master/1-CONTRIBUTION-GUIDE/images/visualizebutton.svg?sanitize=true)](http://armviz.io/#/?load=)
+[![Deploy To Azure](https://raw.githubusercontent.com/azure/azure-quickstart-templates/master/1-CONTRIBUTION-GUIDE/images/deploytoazure.svg?sanitize=true)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Frjygraham%2FCosmosGlobalReplication%2Fmain%2Fiac%2Fmain.json)
+
 
 When the template deployment is complete (~10 minutes), copy the `config` output from the deployment and replace the comment placeholder in the `./src/MultiRegion/MultiRegion.Client/appsettings.json` file:
 
