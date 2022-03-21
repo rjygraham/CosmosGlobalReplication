@@ -1,0 +1,570 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2018-05-01/subscriptionDeploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "_generator": {
+      "name": "bicep",
+      "version": "0.4.1124.51302",
+      "templateHash": "12401362792083599655"
+    }
+  },
+  "parameters": {
+    "regions": {
+      "type": "array",
+      "defaultValue": [
+        {
+          "location": "eastus",
+          "abbreviation": "eus"
+        },
+        {
+          "location": "westus3",
+          "abbreviation": "wus3"
+        },
+        {
+          "location": "westeurope",
+          "abbreviation": "weu"
+        }
+      ]
+    },
+    "namePrefix": {
+      "type": "string",
+      "defaultValue": "[format('a{0}', substring(uniqueString(subscription().subscriptionId), 0, 9))]"
+    }
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2020-10-01",
+      "name": "shared",
+      "location": "[deployment().location]",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "regions": {
+            "value": "[parameters('regions')]"
+          },
+          "namePrefix": {
+            "value": "[format('{0}-shared', parameters('namePrefix'))]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2018-05-01/subscriptionDeploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.4.1124.51302",
+              "templateHash": "6829196081537375969"
+            }
+          },
+          "parameters": {
+            "regions": {
+              "type": "array"
+            },
+            "namePrefix": {
+              "type": "string"
+            }
+          },
+          "resources": [
+            {
+              "type": "Microsoft.Resources/resourceGroups",
+              "apiVersion": "2021-04-01",
+              "name": "[toUpper(parameters('namePrefix'))]",
+              "location": "[parameters('regions')[0].location]"
+            },
+            {
+              "type": "Microsoft.Resources/deployments",
+              "apiVersion": "2020-10-01",
+              "name": "[toLower(format('{0}-resources', toUpper(parameters('namePrefix'))))]",
+              "resourceGroup": "[toUpper(parameters('namePrefix'))]",
+              "properties": {
+                "expressionEvaluationOptions": {
+                  "scope": "inner"
+                },
+                "mode": "Incremental",
+                "parameters": {
+                  "regions": {
+                    "value": "[parameters('regions')]"
+                  },
+                  "namePrefix": {
+                    "value": "[parameters('namePrefix')]"
+                  }
+                },
+                "template": {
+                  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+                  "contentVersion": "1.0.0.0",
+                  "metadata": {
+                    "_generator": {
+                      "name": "bicep",
+                      "version": "0.4.1124.51302",
+                      "templateHash": "16132685348383443853"
+                    }
+                  },
+                  "parameters": {
+                    "regions": {
+                      "type": "array"
+                    },
+                    "namePrefix": {
+                      "type": "string"
+                    }
+                  },
+                  "variables": {
+                    "cosmosDbName": "[format('{0}-cosmosdb', parameters('namePrefix'))]",
+                    "cosmosDatabaseName": "Global",
+                    "cosmosContainerName": "Messages",
+                    "location": "[parameters('regions')[0].location]"
+                  },
+                  "resources": [
+                    {
+                      "type": "Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers",
+                      "apiVersion": "2021-11-15-preview",
+                      "name": "[format('{0}/{1}/{2}', variables('cosmosDbName'), variables('cosmosDatabaseName'), variables('cosmosContainerName'))]",
+                      "properties": {
+                        "resource": {
+                          "id": "[variables('cosmosContainerName')]",
+                          "partitionKey": {
+                            "paths": [
+                              "/id"
+                            ],
+                            "kind": "Hash"
+                          }
+                        }
+                      },
+                      "dependsOn": [
+                        "[resourceId('Microsoft.DocumentDB/databaseAccounts', variables('cosmosDbName'))]",
+                        "[resourceId('Microsoft.DocumentDB/databaseAccounts/sqlDatabases', variables('cosmosDbName'), variables('cosmosDatabaseName'))]"
+                      ]
+                    },
+                    {
+                      "type": "Microsoft.DocumentDB/databaseAccounts/sqlDatabases",
+                      "apiVersion": "2021-11-15-preview",
+                      "name": "[format('{0}/{1}', variables('cosmosDbName'), variables('cosmosDatabaseName'))]",
+                      "location": "[variables('location')]",
+                      "properties": {
+                        "options": {
+                          "autoscaleSettings": {
+                            "maxThroughput": 1000
+                          }
+                        },
+                        "resource": {
+                          "id": "[variables('cosmosDatabaseName')]"
+                        }
+                      },
+                      "dependsOn": [
+                        "[resourceId('Microsoft.DocumentDB/databaseAccounts', variables('cosmosDbName'))]"
+                      ]
+                    },
+                    {
+                      "type": "Microsoft.DocumentDB/databaseAccounts",
+                      "apiVersion": "2021-11-15-preview",
+                      "name": "[variables('cosmosDbName')]",
+                      "location": "[variables('location')]",
+                      "properties": {
+                        "copy": [
+                          {
+                            "name": "locations",
+                            "count": "[length(parameters('regions'))]",
+                            "input": {
+                              "failoverPriority": "[copyIndex('locations')]",
+                              "isZoneRedundant": false,
+                              "locationName": "[parameters('regions')[copyIndex('locations')].location]"
+                            }
+                          }
+                        ],
+                        "databaseAccountOfferType": "Standard",
+                        "enableAutomaticFailover": true,
+                        "enableMultipleWriteLocations": true
+                      }
+                    }
+                  ],
+                  "outputs": {
+                    "sharedCosmosDbName": {
+                      "type": "string",
+                      "value": "[variables('cosmosDbName')]"
+                    }
+                  }
+                }
+              },
+              "dependsOn": [
+                "[subscriptionResourceId('Microsoft.Resources/resourceGroups', toUpper(parameters('namePrefix')))]"
+              ]
+            }
+          ],
+          "outputs": {
+            "sharedResourceGroupName": {
+              "type": "string",
+              "value": "[toUpper(parameters('namePrefix'))]"
+            },
+            "sharedCosmosDbName": {
+              "type": "string",
+              "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, toUpper(parameters('namePrefix'))), 'Microsoft.Resources/deployments', toLower(format('{0}-resources', toUpper(parameters('namePrefix'))))), '2020-10-01').outputs.sharedCosmosDbName.value]"
+            }
+          }
+        }
+      }
+    },
+    {
+      "copy": {
+        "name": "regionDeploymnent",
+        "count": "[length(parameters('regions'))]"
+      },
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2020-10-01",
+      "name": "[format('{0}', parameters('regions')[copyIndex()].location)]",
+      "location": "[deployment().location]",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "location": {
+            "value": "[parameters('regions')[copyIndex()].location]"
+          },
+          "namePrefix": {
+            "value": "[format('{0}-{1}', parameters('namePrefix'), parameters('regions')[copyIndex()].abbreviation)]"
+          },
+          "sharedResourceGroupName": {
+            "value": "[reference(subscriptionResourceId('Microsoft.Resources/deployments', 'shared'), '2020-10-01').outputs.sharedResourceGroupName.value]"
+          },
+          "sharedCosmosDbName": {
+            "value": "[reference(subscriptionResourceId('Microsoft.Resources/deployments', 'shared'), '2020-10-01').outputs.sharedCosmosDbName.value]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2018-05-01/subscriptionDeploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.4.1124.51302",
+              "templateHash": "3162745123233435334"
+            }
+          },
+          "parameters": {
+            "location": {
+              "type": "string"
+            },
+            "namePrefix": {
+              "type": "string"
+            },
+            "sharedResourceGroupName": {
+              "type": "string"
+            },
+            "sharedCosmosDbName": {
+              "type": "string"
+            }
+          },
+          "resources": [
+            {
+              "type": "Microsoft.Resources/resourceGroups",
+              "apiVersion": "2021-04-01",
+              "name": "[toUpper(parameters('namePrefix'))]",
+              "location": "[parameters('location')]"
+            },
+            {
+              "type": "Microsoft.Resources/deployments",
+              "apiVersion": "2020-10-01",
+              "name": "[toLower(format('{0}-resources', toUpper(parameters('namePrefix'))))]",
+              "resourceGroup": "[toUpper(parameters('namePrefix'))]",
+              "properties": {
+                "expressionEvaluationOptions": {
+                  "scope": "inner"
+                },
+                "mode": "Incremental",
+                "parameters": {
+                  "location": {
+                    "value": "[parameters('location')]"
+                  },
+                  "namePrefix": {
+                    "value": "[parameters('namePrefix')]"
+                  },
+                  "sharedResourceGroupName": {
+                    "value": "[parameters('sharedResourceGroupName')]"
+                  },
+                  "sharedCosmosDbName": {
+                    "value": "[parameters('sharedCosmosDbName')]"
+                  }
+                },
+                "template": {
+                  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+                  "contentVersion": "1.0.0.0",
+                  "metadata": {
+                    "_generator": {
+                      "name": "bicep",
+                      "version": "0.4.1124.51302",
+                      "templateHash": "10105687203382973616"
+                    }
+                  },
+                  "parameters": {
+                    "location": {
+                      "type": "string"
+                    },
+                    "namePrefix": {
+                      "type": "string"
+                    },
+                    "sharedResourceGroupName": {
+                      "type": "string"
+                    },
+                    "sharedCosmosDbName": {
+                      "type": "string"
+                    }
+                  },
+                  "variables": {
+                    "signalRName": "[format('{0}-sigr', parameters('namePrefix'))]",
+                    "logAnalyticsWorkspaceName": "[format('{0}-law', parameters('namePrefix'))]",
+                    "appInsightsName": "[format('{0}-ai', parameters('namePrefix'))]",
+                    "storageAccountName": "[toLower(replace(format('{0}-stg', parameters('namePrefix')), '-', ''))]",
+                    "serverFarmName": "[format('{0}-asp', parameters('namePrefix'))]",
+                    "functionName": "[format('{0}-func', parameters('namePrefix'))]",
+                    "cosmosDbName": "[format('{0}-cosmosdb', parameters('namePrefix'))]",
+                    "cosmosDbDatabaseName": "Local",
+                    "cosmosDbContainerName": "Leases"
+                  },
+                  "resources": [
+                    {
+                      "type": "Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers",
+                      "apiVersion": "2021-11-15-preview",
+                      "name": "[format('{0}/{1}/{2}', variables('cosmosDbName'), variables('cosmosDbDatabaseName'), variables('cosmosDbContainerName'))]",
+                      "properties": {
+                        "resource": {
+                          "id": "[variables('cosmosDbContainerName')]",
+                          "partitionKey": {
+                            "paths": [
+                              "/id"
+                            ],
+                            "kind": "Hash"
+                          }
+                        }
+                      },
+                      "dependsOn": [
+                        "[resourceId('Microsoft.DocumentDB/databaseAccounts', variables('cosmosDbName'))]",
+                        "[resourceId('Microsoft.DocumentDB/databaseAccounts/sqlDatabases', variables('cosmosDbName'), variables('cosmosDbDatabaseName'))]"
+                      ]
+                    },
+                    {
+                      "type": "Microsoft.DocumentDB/databaseAccounts/sqlDatabases",
+                      "apiVersion": "2021-11-15-preview",
+                      "name": "[format('{0}/{1}', variables('cosmosDbName'), variables('cosmosDbDatabaseName'))]",
+                      "location": "[parameters('location')]",
+                      "properties": {
+                        "options": {
+                          "throughput": 400
+                        },
+                        "resource": {
+                          "id": "[variables('cosmosDbDatabaseName')]"
+                        }
+                      },
+                      "dependsOn": [
+                        "[resourceId('Microsoft.DocumentDB/databaseAccounts', variables('cosmosDbName'))]"
+                      ]
+                    },
+                    {
+                      "type": "Microsoft.DocumentDB/databaseAccounts",
+                      "apiVersion": "2021-11-15-preview",
+                      "name": "[variables('cosmosDbName')]",
+                      "location": "[parameters('location')]",
+                      "properties": {
+                        "databaseAccountOfferType": "Standard",
+                        "locations": [
+                          {
+                            "failoverPriority": 0,
+                            "isZoneRedundant": false,
+                            "locationName": "[parameters('location')]"
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "type": "Microsoft.SignalRService/signalR",
+                      "apiVersion": "2021-10-01",
+                      "name": "[variables('signalRName')]",
+                      "location": "[parameters('location')]",
+                      "sku": {
+                        "name": "Free_F1",
+                        "tier": "Free"
+                      },
+                      "properties": {
+                        "features": [
+                          {
+                            "flag": "ServiceMode",
+                            "value": "Serverless"
+                          },
+                          {
+                            "flag": "EnableConnectivityLogs",
+                            "value": "true"
+                          }
+                        ],
+                        "cors": {
+                          "allowedOrigins": [
+                            "*"
+                          ]
+                        },
+                        "tls": {
+                          "clientCertEnabled": false
+                        }
+                      }
+                    },
+                    {
+                      "type": "Microsoft.Storage/storageAccounts",
+                      "apiVersion": "2021-08-01",
+                      "name": "[variables('storageAccountName')]",
+                      "location": "[parameters('location')]",
+                      "sku": {
+                        "name": "Standard_LRS"
+                      },
+                      "kind": "StorageV2"
+                    },
+                    {
+                      "type": "Microsoft.OperationalInsights/workspaces",
+                      "apiVersion": "2021-12-01-preview",
+                      "name": "[variables('logAnalyticsWorkspaceName')]",
+                      "location": "[parameters('location')]"
+                    },
+                    {
+                      "type": "Microsoft.Insights/components",
+                      "apiVersion": "2020-02-02",
+                      "name": "[variables('appInsightsName')]",
+                      "location": "[parameters('location')]",
+                      "kind": "web",
+                      "properties": {
+                        "Application_Type": "web",
+                        "Flow_Type": "Bluefield",
+                        "WorkspaceResourceId": "[resourceId('Microsoft.OperationalInsights/workspaces', variables('logAnalyticsWorkspaceName'))]"
+                      },
+                      "dependsOn": [
+                        "[resourceId('Microsoft.OperationalInsights/workspaces', variables('logAnalyticsWorkspaceName'))]"
+                      ]
+                    },
+                    {
+                      "type": "Microsoft.Web/serverfarms",
+                      "apiVersion": "2021-03-01",
+                      "name": "[variables('serverFarmName')]",
+                      "location": "[parameters('location')]",
+                      "sku": {
+                        "name": "Y1",
+                        "tier": "Dynamic",
+                        "size": "Y1",
+                        "family": "Y"
+                      },
+                      "kind": "functionapp",
+                      "properties": {
+                        "reserved": true
+                      }
+                    },
+                    {
+                      "type": "Microsoft.Web/sites",
+                      "apiVersion": "2021-03-01",
+                      "name": "[variables('functionName')]",
+                      "location": "[parameters('location')]",
+                      "kind": "functionapp,linux",
+                      "properties": {
+                        "reserved": true,
+                        "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', variables('serverFarmName'))]",
+                        "siteConfig": {
+                          "appSettings": [
+                            {
+                              "name": "APPINSIGHTS_INSTRUMENTATIONKEY",
+                              "value": "[reference(resourceId('Microsoft.Insights/components', variables('appInsightsName'))).InstrumentationKey]"
+                            },
+                            {
+                              "name": "APPLICATIONINSIGHTS_CONNECTION_STRING",
+                              "value": "[reference(resourceId('Microsoft.Insights/components', variables('appInsightsName'))).ConnectionString]"
+                            },
+                            {
+                              "name": "AzureSignalRConnectionString",
+                              "value": "[listKeys(resourceId('Microsoft.SignalRService/signalR', variables('signalRName')), '2021-10-01').primaryConnectionString]"
+                            },
+                            {
+                              "name": "AzureWebJobs.CreateRecord.Disabled",
+                              "value": "1"
+                            },
+                            {
+                              "name": "AzureWebJobsStorage",
+                              "value": "[format('DefaultEndpointsProtocol=https;AccountName={0};AccountKey={1};EndpointSuffix=core.windows.net', variables('storageAccountName'), listKeys(resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName')), '2021-08-01').keys[0].value)]"
+                            },
+                            {
+                              "name": "CosmosDbGlobalConnectionString",
+                              "value": "[listConnectionStrings(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('sharedResourceGroupName')), 'Microsoft.DocumentDB/databaseAccounts', parameters('sharedCosmosDbName')), '2021-11-15-preview').connectionStrings[0].connectionString]"
+                            },
+                            {
+                              "name": "CosmosDbLocalConnectionString",
+                              "value": "[listConnectionStrings(resourceId('Microsoft.DocumentDB/databaseAccounts', variables('cosmosDbName')), '2021-11-15-preview').connectionStrings[0].connectionString]"
+                            },
+                            {
+                              "name": "FUNCTIONS_EXTENSION_VERSION",
+                              "value": "~4"
+                            },
+                            {
+                              "name": "FUNCTIONS_WORKER_RUNTIME",
+                              "value": "dotnet"
+                            },
+                            {
+                              "name": "origin",
+                              "value": "[parameters('location')]"
+                            },
+                            {
+                              "name": "WEBSITE_RUN_FROM_PACKAGE",
+                              "value": "https://github.com/rjygraham/CosmosGlobalReplication/releases/download/latest/MultiRegionFunctions.zip"
+                            }
+                          ]
+                        }
+                      },
+                      "dependsOn": [
+                        "[resourceId('Microsoft.Insights/components', variables('appInsightsName'))]",
+                        "[resourceId('Microsoft.DocumentDB/databaseAccounts', variables('cosmosDbName'))]",
+                        "[resourceId('Microsoft.Web/serverfarms', variables('serverFarmName'))]",
+                        "[resourceId('Microsoft.SignalRService/signalR', variables('signalRName'))]",
+                        "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName'))]"
+                      ]
+                    }
+                  ],
+                  "outputs": {
+                    "functionAppUrl": {
+                      "type": "string",
+                      "value": "[format('https://{0}/api', reference(resourceId('Microsoft.Web/sites', variables('functionName'))).hostNames[0])]"
+                    },
+                    "functionAppKey": {
+                      "type": "string",
+                      "value": "[listKeys(format('{0}/host/default', resourceId('Microsoft.Web/sites', variables('functionName'))), '2021-02-01').functionKeys.default]"
+                    }
+                  }
+                }
+              },
+              "dependsOn": [
+                "[subscriptionResourceId('Microsoft.Resources/resourceGroups', toUpper(parameters('namePrefix')))]"
+              ]
+            }
+          ],
+          "outputs": {
+            "regionConfig": {
+              "type": "object",
+              "value": {
+                "url": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, toUpper(parameters('namePrefix'))), 'Microsoft.Resources/deployments', toLower(format('{0}-resources', toUpper(parameters('namePrefix'))))), '2020-10-01').outputs.functionAppUrl.value]",
+                "key": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, toUpper(parameters('namePrefix'))), 'Microsoft.Resources/deployments', toLower(format('{0}-resources', toUpper(parameters('namePrefix'))))), '2020-10-01').outputs.functionAppKey.value]"
+              }
+            }
+          }
+        }
+      },
+      "dependsOn": [
+        "[subscriptionResourceId('Microsoft.Resources/deployments', 'shared')]"
+      ]
+    }
+  ],
+  "outputs": {
+    "config": {
+      "type": "array",
+      "copy": {
+        "count": "[length(parameters('regions'))]",
+        "input": {
+          "name": "[parameters('regions')[copyIndex()].location]",
+          "config": "[reference(subscriptionResourceId('Microsoft.Resources/deployments', format('{0}', parameters('regions')[copyIndex()].location)), '2020-10-01').outputs.regionConfig.value]"
+        }
+      }
+    }
+  }
+}

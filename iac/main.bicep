@@ -15,7 +15,7 @@ param regions array = [
   }
 ]
 
-param namePrefix string = uniqueString(subscription().subscriptionId)
+param namePrefix string = 'a${substring(uniqueString(subscription().subscriptionId), 0, 9)}'
 
 module sharedDeployment 'modules/sharedResourceGroup.bicep' = {
   name: 'shared'
